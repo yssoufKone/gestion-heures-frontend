@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+
+  /* Layout principal */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Grilles stats */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Tableaux scrollables */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* Grilles 2 colonnes → 1 colonne */
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Padding réduit */
+  .content-padding {
+    padding: 16px !important;
+  }
+
+  /* Topbar */
+  .topbar-title {
+    font-size: 14px !important;
+  }
+
+  /* Login page */
+  .login-left {
+    display: none !important;
+  }
+
+  .login-right {
+    width: 100% !important;
+    padding: 40px 24px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
