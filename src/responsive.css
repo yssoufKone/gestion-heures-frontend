@@ -1,0 +1,157 @@
+/* ============================================
+   GESTHEURE — RESPONSIVE MOBILE
+   À importer dans main.jsx
+   ============================================ */
+
+/* ─── VARIABLES ─── */
+:root {
+  --sidebar-width: 240px;
+}
+
+/* ─── BASE ─── */
+* {
+  box-sizing: border-box;
+}
+
+/* ─── SIDEBAR MOBILE ─── */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -240px !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    transition: left 0.3s ease !important;
+  }
+
+  .sidebar.open {
+    left: 0 !important;
+  }
+
+  .hamburger-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .sidebar-overlay {
+    display: block !important;
+  }
+
+  /* Layout principal */
+  .main-layout {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* ─── TOPBAR ─── */
+  .topbar {
+    padding: 0 16px !important;
+    height: auto !important;
+    min-height: 58px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .topbar h1 {
+    font-size: 15px !important;
+  }
+
+  /* ─── CONTENU PRINCIPAL ─── */
+  .page-content {
+    padding: 16px !important;
+  }
+
+  /* ─── GRILLES STATS ─── */
+  .stats-grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .stats-grid-3 {
+    grid-template-columns: repeat(1, 1fr) !important;
+  }
+
+  /* ─── GRAPHIQUES ─── */
+  .charts-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─── FILTRES ─── */
+  .filters-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─── TABLEAUX ─── */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  table {
+    min-width: 600px !important;
+  }
+
+  /* ─── MODALS ─── */
+  .modal-container {
+    width: 95% !important;
+    padding: 20px !important;
+    margin: 10px !important;
+    max-height: 95vh !important;
+  }
+
+  /* ─── LOGIN ─── */
+  .login-left {
+    display: none !important;
+  }
+
+  .login-right {
+    width: 100% !important;
+    padding: 40px 24px !important;
+  }
+
+  /* ─── BOUTONS ─── */
+  .btn-group {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* ─── EXPORTS ─── */
+  .exports-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─── ÉTAT GLOBAL ─── */
+  .etat-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .etat-resume-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─── ENSEIGNANT DASHBOARD ─── */
+  .enseignant-recap-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── TRÈS PETIT ÉCRAN (< 480px) ─── */
+@media (max-width: 480px) {
+  .stats-grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .etat-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .topbar h1 {
+    font-size: 13px !important;
+  }
+
+  table {
+    min-width: 500px !important;
+  }
+}
