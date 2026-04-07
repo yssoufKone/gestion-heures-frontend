@@ -28,7 +28,7 @@ const Login = () => {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Côté gauche */}
+      {/* Côté gauche - caché sur mobile */}
       <div style={{
         flex: 1,
         background: 'linear-gradient(145deg, #1e3a5f 0%, #2a5298 60%, #3b82f6 100%)',
@@ -37,7 +37,7 @@ const Login = () => {
         justifyContent: 'center',
         padding: '60px',
         color: 'white'
-      }}>
+      }} className="login-left">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '48px' }}>
           <div style={{
             width: '44px', height: '44px',
@@ -51,7 +51,7 @@ const Login = () => {
           Gestion des heures<br />d'enseignement
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px', lineHeight: '1.7', maxWidth: '380px' }}>
-          Plateforme centralisée pour le suivi, le calcul et la validation des volumes horaires des enseignants du supérieur.
+          Plateforme centralisée pour le suivi, le calcul et la validation des volumes horaires.
         </p>
         <div style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {['Calcul automatique des heures complémentaires',
@@ -69,14 +69,31 @@ const Login = () => {
 
       {/* Côté droit */}
       <div style={{
-        width: '480px',
+        width: '100%',
+        maxWidth: '480px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '60px 50px',
-        background: 'white'
+        padding: '40px 24px',
+        background: 'white',
+        margin: '0 auto'
       }}>
         <div style={{ width: '100%' }}>
+          {/* Logo visible uniquement sur mobile */}
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            gap: '10px', marginBottom: '32px',
+            justifyContent: 'center'
+          }} className="login-logo-mobile">
+            <div style={{
+              width: '40px', height: '40px',
+              background: '#1e3a5f', borderRadius: '10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '20px'
+            }}>🎓</div>
+            <span style={{ fontSize: '20px', fontWeight: '700', color: '#1e3a5f' }}>GestHeure</span>
+          </div>
+
           <h2 style={{ fontSize: '26px', fontWeight: '700', color: '#1e3a5f', marginBottom: '6px' }}>
             Connexion
           </h2>

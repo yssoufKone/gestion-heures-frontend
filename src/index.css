@@ -64,3 +64,18 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+/* Login responsive */
+@media (max-width: 768px) {
+  .login-left {
+    display: none !important;
+  }
+  .login-logo-mobile {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .login-logo-mobile {
+    display: none !important;
+  }
+}
