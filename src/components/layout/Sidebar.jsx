@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -7,6 +7,18 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Fermer la sidebar quand on change de page sur mobile
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
 
   const adminMenus = [
     { icon: '📊', label: 'Tableau de bord', path: '/admin/dashboard' },
@@ -41,88 +53,70 @@ const Sidebar = () => {
     setIsOpen(false);
   };
 
+  const sidebarStyle = isMobile ? {
+    position: 'fixed',
+    left: isOpen ? '0' : '-260px',
+    top: 0,
+    height: '100vh',
+    overflowY: 'auto',
+    transition: 'left 0.3s ease',
+    zIndex: 1000,
+  } : {
+    position: 'relative',
+    zIndex: 1000,
+  };
+
   return (
     <>
-      <style>{`
-        .hamburger-btn {
-          display: none;
-          position: fixed;
-          top: 10px;
-          left: 10px;
-          z-index: 1100;
-          background: #1e3a5f;
-          border: none;
-          border-radius: 8px;
-          width: 42px;
-          height: 42px;
-          cursor: pointer;
-          font-size: 20px;
-          color: white;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .sidebar-overlay {
-          display: none;
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.5);
-          z-index: 999;
-        }
-        .sidebar {
-          width: 240px;
-          background: #1e3a5f;
-          display: flex;
-          flex-direction: column;
-          flex-shrink: 0;
-          min-height: 100vh;
-          position: relative;
-          z-index: 1000;
-          transition: left 0.3s ease;
-        }
-        @media (max-width: 768px) {
-          .hamburger-btn {
-            display: flex !important;
-          }
-          .sidebar-overlay {
-            display: ${() => 'block'} !important;
-          }
-          .sidebar {
-            position: fixed !important;
-            top: 0 !important;
-            height: 100vh !important;
-            overflow-y: auto;
-          }
-        }
-      `}</style>
+      {/* Bouton hamburger — visible uniquement sur mobile */}
+      {isMobile && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          style={{
+            position: 'fixed',
+            top: '10px', left: '10px',
+            zIndex: 1100,
+            background: '#1e3a5f',
+            border: 'none',
+            borderRadius: '8px',
+            width: '42px', height: '42px',
+            cursor: 'pointer',
+            fontSize: '20px',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          {isOpen ? '✕' : '☰'}
+        </button>
+      )}
 
-      {/* Bouton hamburger */}
-      <button
-        className="hamburger-btn"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? '✕' : '☰'}
-      </button>
-
-      {/* Overlay */}
-      {isOpen && (
+      {/* Overlay — visible quand sidebar ouverte sur mobile */}
+      {isMobile && isOpen && (
         <div
-          className="sidebar-overlay"
           onClick={() => setIsOpen(false)}
-          style={{ display: 'block' }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 999,
+          }}
         />
       )}
 
       {/* Sidebar */}
-      <div
-        className="sidebar"
-        style={{
-          left: isOpen ? '0' : undefined,
-          ...(typeof window !== 'undefined' && window.innerWidth <= 768
-            ? { position: 'fixed', left: isOpen ? '0' : '-240px', top: 0, height: '100vh' }
-            : {})
-        }}
-      >
+      <div style={{
+        width: '240px',
+        background: '#1e3a5f',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        minHeight: '100vh',
+        ...sidebarStyle
+      }}>
+        {/* Brand */}
         <div style={{
           padding: '22px 20px',
           display: 'flex',
@@ -139,6 +133,7 @@ const Sidebar = () => {
           <span style={{ color: 'white', fontSize: '16px', fontWeight: '700' }}>GestHeure</span>
         </div>
 
+        {/* Menus */}
         <div style={{ padding: '16px 12px', flex: 1 }}>
           <div style={{
             fontSize: '10px', fontWeight: '600',
@@ -164,6 +159,7 @@ const Sidebar = () => {
           ))}
         </div>
 
+        {/* User */}
         <div style={{
           padding: '16px 12px',
           borderTop: '1px solid rgba(255,255,255,0.08)'
@@ -184,15 +180,11 @@ const Sidebar = () => {
               <div style={{ color: 'white', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user?.prenom} {user?.nom}
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px' }}>
-                {user?.role}
-              </div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px' }}>{user?.role}</div>
             </div>
-            <div
-              onClick={logout}
-              style={{ color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '18px', flexShrink: 0 }}
-              title="Déconnexion"
-            >🚪</div>
+            <div onClick={logout} style={{ color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '18px', flexShrink: 0 }} title="Déconnexion">
+              🚪
+            </div>
           </div>
         </div>
       </div>
