@@ -11,64 +11,99 @@ const Recapitulatif = () => {
   const [enseignantId, setEnseignantId] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadingPDF, setLoadingPDF] = useState(false);
+  const [loadingExcel, setLoadingExcel] = useState(false);
+
+  const fetchData = async (selectedAnneeId = null) => {
+    try {
+      const [profilRes, anneesRes] = await Promise.all([
+        api.get('/auth/mon-profil-enseignant'),
+        api.get('/annees')
+      ]);
+
+      const enseignant = profilRes.data.data;
+      const anneesList = anneesRes.data.data;
+
+      if (enseignant) {
+        setEnseignantId(enseignant.id);
+        const anneeToUse = selectedAnneeId || anneesList[0]?.id || '';
+        setAnneeId(anneeToUse);
+
+        if (anneeToUse) {
+          const res = await api.get(`/heures/enseignant/${enseignant.id}?anneeId=${anneeToUse}`);
+          setData(res.data.data);
+        }
+      }
+      setAnnees(anneesList);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [profilRes, anneesRes] = await Promise.all([
-          api.get('/auth/mon-profil-enseignant'),
-          api.get('/annees')
-        ]);
-        const enseignant = profilRes.data.data;
-        const anneesList = anneesRes.data.data;
-
-        if (enseignant) {
-          setEnseignantId(enseignant.id);
-          if (anneesList.length > 0) {
-            setAnneeId(anneesList[0].id);
-            const res = await api.get(`/heures/enseignant/${enseignant.id}`);
-            setData(res.data.data);
-          }
-        }
-        setAnnees(anneesList);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    if (user?.role === 'enseignant') fetchData();
   }, [user]);
 
+  const handleAnneeChange = (e) => {
+    const newId = e.target.value;
+    setAnneeId(newId);
+    if (enseignantId && newId) fetchData(newId);
+  };
+
+  // Téléchargement PDF
   const handleDownloadPDF = async () => {
+    if (!enseignantId || !anneeId) return;
     try {
       setLoadingPDF(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `http://localhost:5001/api/exports/pdf/${enseignantId}/${anneeId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const response = await api.get(`/exports/pdf/${enseignantId}/${anneeId}`, {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(response.data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `mon_recapitulatif.pdf`;
+      a.download = `recapitulatif_${anneeId}.pdf`;
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
+      alert('Erreur lors du téléchargement PDF. Vérifie que le backend est bien en ligne.');
     } finally {
       setLoadingPDF(false);
     }
   };
 
-  if (loading) return (
-    <Layout>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-        <p>Chargement...</p>
-      </div>
-    </Layout>
-  );
+  // Téléchargement Excel
+  const handleDownloadExcel = async () => {
+    if (!enseignantId || !anneeId) return;
+    try {
+      setLoadingExcel(true);
+      const response = await api.get(`/exports/excel/${enseignantId}/${anneeId}`, {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(response.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `recapitulatif_${anneeId}.xlsx`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors du téléchargement Excel. Vérifie que le backend est bien en ligne.');
+    } finally {
+      setLoadingExcel(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ padding: '40px', textAlign: 'center' }}>Chargement de votre récapitulatif...</div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -80,22 +115,35 @@ const Recapitulatif = () => {
         <h1 style={{ fontSize: '17px', fontWeight: '600', color: '#1e3a5f' }}>
           Mon Récapitulatif
         </h1>
-        <button
-          onClick={handleDownloadPDF}
-          disabled={loadingPDF || !enseignantId}
-          style={{
-            background: '#ef4444', color: 'white',
-            border: 'none', borderRadius: '8px',
-            padding: '8px 18px', fontSize: '14px',
-            fontWeight: '500', cursor: 'pointer'
-          }}
-        >
-          {loadingPDF ? 'Génération...' : '📄 Télécharger mon PDF'}
-        </button>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={handleDownloadPDF}
+            disabled={loadingPDF || !enseignantId || !anneeId}
+            style={{
+              background: '#ef4444', color: 'white', padding: '9px 20px',
+              borderRadius: '8px', border: 'none', fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            {loadingPDF ? '⏳ PDF...' : '📄 PDF'}
+          </button>
+
+          <button
+            onClick={handleDownloadExcel}
+            disabled={loadingExcel || !enseignantId || !anneeId}
+            style={{
+              background: '#10b981', color: 'white', padding: '9px 20px',
+              borderRadius: '8px', border: 'none', fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            {loadingExcel ? '⏳ Excel...' : '📊 Excel'}
+          </button>
+        </div>
       </div>
 
-      <div style={{ padding: '28px', overflowY: 'auto', flex: 1 }}>
-
+      <div style={{ padding: '28px' }}>
         {/* Sélection année */}
         <div style={{
           background: 'white', border: '1px solid #e2e8f0',
@@ -106,7 +154,7 @@ const Recapitulatif = () => {
           </label>
           <select
             value={anneeId}
-            onChange={e => setAnneeId(e.target.value)}
+            onChange={handleAnneeChange}
             style={{
               width: '300px', padding: '10px 14px',
               border: '1.5px solid #e2e8f0', borderRadius: '8px',

@@ -5,8 +5,10 @@ import api from '../../services/api';
 const AnneeAcademique = () => {
   const [annees, setAnnees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editData, setEditData] = useState(null);
+
   const [form, setForm] = useState({
     libelle: '', dateDebut: '', dateFin: '',
     active: false, coefficientCM: 1.0,
@@ -14,17 +16,22 @@ const AnneeAcademique = () => {
   });
 
   const fetchAnnees = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/annees');
-      setAnnees(res.data.data);
+      setAnnees(res.data.data || []);
     } catch (err) {
-      console.error(err);
+      console.error('Erreur fetch /annees :', err);
+      setError('Impossible de charger les années académiques. Vérifie les permissions backend (rôle admin).');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchAnnees(); }, []);
+  useEffect(() => {
+    fetchAnnees();
+  }, []);
 
   const handleSubmit = async () => {
     try {
@@ -35,27 +42,41 @@ const AnneeAcademique = () => {
       }
       setShowModal(false);
       setEditData(null);
-      setForm({ libelle: '', dateDebut: '', dateFin: '', active: false, coefficientCM: 1.0, coefficientTD: 1.0, coefficientTP: 0.67 });
-      fetchAnnees();
+      setForm({
+        libelle: '', dateDebut: '', dateFin: '',
+        active: false, coefficientCM: 1.0,
+        coefficientTD: 1.0, coefficientTP: 0.67
+      });
+      fetchAnnees(); // rafraîchir la liste
     } catch (err) {
       console.error(err);
+      alert('Erreur lors de l’enregistrement. Vérifie la console (F12).');
     }
   };
 
   const handleEdit = (a) => {
     setEditData(a);
     setForm({
-      libelle: a.libelle, dateDebut: a.dateDebut, dateFin: a.dateFin,
-      active: a.active, coefficientCM: a.coefficientCM,
-      coefficientTD: a.coefficientTD, coefficientTP: a.coefficientTP
+      libelle: a.libelle,
+      dateDebut: a.dateDebut,
+      dateFin: a.dateFin,
+      active: a.active,
+      coefficientCM: a.coefficientCM,
+      coefficientTD: a.coefficientTD,
+      coefficientTP: a.coefficientTP
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Confirmer la suppression ?')) {
-      await api.delete(`/annees/${id}`);
-      fetchAnnees();
+    if (window.confirm('Confirmer la suppression de cette année ?')) {
+      try {
+        await api.delete(`/annees/${id}`);
+        fetchAnnees();
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors de la suppression');
+      }
     }
   };
 
@@ -90,6 +111,12 @@ const AnneeAcademique = () => {
       </div>
 
       <div style={{ padding: '28px', overflowY: 'auto', flex: 1 }}>
+        {error && (
+          <div style={{ background: '#fef2f2', color: '#dc2626', padding: '12px 20px', borderRadius: '8px', marginBottom: '20px' }}>
+            {error}
+          </div>
+        )}
+
         <div style={{
           background: 'white', border: '1px solid #e2e8f0',
           borderRadius: '12px', overflow: 'hidden'
@@ -109,9 +136,9 @@ const AnneeAcademique = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Chargement...</td></tr>
+                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Chargement...</td></tr>
               ) : annees.length === 0 ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Aucune année trouvée</td></tr>
+                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Aucune année académique trouvée</td></tr>
               ) : annees.map((a, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={{ padding: '14px 16px', fontWeight: '500', fontSize: '14px' }}>{a.libelle}</td>
@@ -125,26 +152,14 @@ const AnneeAcademique = () => {
                       padding: '3px 10px', borderRadius: '99px', fontSize: '11.5px', fontWeight: '500',
                       background: a.active ? '#f0fdf4' : '#f1f5f9',
                       color: a.active ? '#16a34a' : '#64748b'
-                    }}>{a.active ? '✅ Active' : 'Inactive'}</span>
+                    }}>
+                      {a.active ? '✅ Active' : 'Inactive'}
+                    </span>
                   </td>
                   <td style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => handleEdit(a)}
-                        style={{
-                          padding: '5px 12px', borderRadius: '6px',
-                          border: '1px solid #e2e8f0', background: 'white',
-                          fontSize: '12px', cursor: 'pointer', color: '#1e3a5f'
-                        }}
-                      >✏️ Modifier</button>
-                      <button
-                        onClick={() => handleDelete(a.id)}
-                        style={{
-                          padding: '5px 12px', borderRadius: '6px',
-                          border: '1px solid #fecaca', background: '#fef2f2',
-                          fontSize: '12px', cursor: 'pointer', color: '#dc2626'
-                        }}
-                      >🗑️ Supprimer</button>
+                      <button onClick={() => handleEdit(a)} style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', background: 'white', fontSize: '12px', cursor: 'pointer', color: '#1e3a5f' }}>✏️ Modifier</button>
+                      <button onClick={() => handleDelete(a.id)} style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #fecaca', background: '#fef2f2', fontSize: '12px', cursor: 'pointer', color: '#dc2626' }}>🗑️ Supprimer</button>
                     </div>
                   </td>
                 </tr>
@@ -154,22 +169,16 @@ const AnneeAcademique = () => {
         </div>
       </div>
 
+      {/* Modal */}
       {showModal && (
-        <div style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white', borderRadius: '12px',
-            padding: '28px', width: '480px', maxHeight: '90vh', overflowY: 'auto'
-          }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: '12px', padding: '28px', width: '480px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1e3a5f', marginBottom: '24px' }}>
               {editData ? "Modifier l'année" : 'Ajouter une année académique'}
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Tous tes champs restent identiques */}
               <div>
                 <label style={labelStyle}>Libellé</label>
                 <input style={inputStyle} value={form.libelle} onChange={e => setForm({ ...form, libelle: e.target.value })} placeholder="ex: 2025-2026" />
@@ -187,48 +196,26 @@ const AnneeAcademique = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={labelStyle}>Coeff CM</label>
-                  <input style={inputStyle} type="number" step="0.01" value={form.coefficientCM} onChange={e => setForm({ ...form, coefficientCM: e.target.value })} />
+                  <input style={inputStyle} type="number" step="0.01" value={form.coefficientCM} onChange={e => setForm({ ...form, coefficientCM: parseFloat(e.target.value) || 1.0 })} />
                 </div>
                 <div>
                   <label style={labelStyle}>Coeff TD</label>
-                  <input style={inputStyle} type="number" step="0.01" value={form.coefficientTD} onChange={e => setForm({ ...form, coefficientTD: e.target.value })} />
+                  <input style={inputStyle} type="number" step="0.01" value={form.coefficientTD} onChange={e => setForm({ ...form, coefficientTD: parseFloat(e.target.value) || 1.0 })} />
                 </div>
                 <div>
                   <label style={labelStyle}>Coeff TP</label>
-                  <input style={inputStyle} type="number" step="0.01" value={form.coefficientTP} onChange={e => setForm({ ...form, coefficientTP: e.target.value })} />
+                  <input style={inputStyle} type="number" step="0.01" value={form.coefficientTP} onChange={e => setForm({ ...form, coefficientTP: parseFloat(e.target.value) || 0.67 })} />
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <input
-                  type="checkbox"
-                  id="active"
-                  checked={form.active}
-                  onChange={e => setForm({ ...form, active: e.target.checked })}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                />
-                <label htmlFor="active" style={{ ...labelStyle, cursor: 'pointer' }}>
-                  Année académique active
-                </label>
+                <input type="checkbox" id="active" checked={form.active} onChange={e => setForm({ ...form, active: e.target.checked })} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                <label htmlFor="active" style={{ ...labelStyle, cursor: 'pointer' }}>Année académique active</label>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => { setShowModal(false); setEditData(null); }}
-                style={{
-                  padding: '10px 20px', borderRadius: '8px',
-                  border: '1px solid #e2e8f0', background: 'white',
-                  fontSize: '14px', cursor: 'pointer'
-                }}
-              >Annuler</button>
-              <button
-                onClick={handleSubmit}
-                style={{
-                  padding: '10px 20px', borderRadius: '8px',
-                  border: 'none', background: '#1e3a5f', color: 'white',
-                  fontSize: '14px', cursor: 'pointer', fontWeight: '500'
-                }}
-              >{editData ? 'Modifier' : 'Ajouter'}</button>
+              <button onClick={() => { setShowModal(false); setEditData(null); }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', fontSize: '14px', cursor: 'pointer' }}>Annuler</button>
+              <button onClick={handleSubmit} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#1e3a5f', color: 'white', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}>{editData ? 'Modifier' : 'Ajouter'}</button>
             </div>
           </div>
         </div>
